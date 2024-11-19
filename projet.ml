@@ -33,15 +33,15 @@ let fusinfo ( file1,file2 : string * string): (string * string) list =
     else 
       (
         let listtmp : (string * string) list ref = ref listfin 
-        and ispresent : bool = false in
+        and ispresent : bool ref = ref false in
         while !listtmp <> [] do 
           if List.hd listdep = List.hd !listtmp
-          then ispresent:= true ;
+          then ispresent := true ;
           listtmp :=  List.tl !listtmp
         done;
-        if not (ispresent) 
+        if not (!ispresent) 
         then aux (List.tl listdep, (List.hd listdep) :: listfin)
         else aux (List.tl listdep,  listfin)
       )
-  in aux (listconcaten,[])
+  in aux(listconcaten,[])
 ;;
