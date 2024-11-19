@@ -22,7 +22,6 @@ let hash_password pwd =
   Base64.encode_exn(Cryptokit.hash_string (Cryptokit.Hash.sha256 ()) pwd)
 ;;
 
-
 let fusinfo ( file1,file2 : string * string): (string * string) list =
   let listefil1 : (string * string) list = read_data_from_file file1 
   and listefil2 : (string * string) list = read_data_from_file file2 in
@@ -45,3 +44,7 @@ let fusinfo ( file1,file2 : string * string): (string * string) list =
       )
   in aux(listconcaten,[])
 ;;
+
+let list = fusinfo("depensetout01.txt","depensetout02.txt");;
+list ;;
+
