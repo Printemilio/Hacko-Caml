@@ -1,0 +1,5 @@
+Réponse au question de Monsieurs X :
+
+- Non ce n'est pas résonnable car il y a 122^93 possibilitées de mots de passes ça serais donc trop long.
+- Oui on peux tenter une attaque en force brute partiel avec la liste des mots de passes les plus utiliser mais on est pas sûr d'arriver au résultat attendu.
+- Oui les mots de passe semble être chiffrer on peux essayer des déchiffrements courrant comme SHA 256 pour trouver les mots de passe. 
