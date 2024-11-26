@@ -1,4 +1,5 @@
 let read_data_from_file file =
+
   let f = open_in file in
   let rec aux acc =
     try
@@ -12,7 +13,7 @@ let read_data_from_file file =
   in
   aux [];;
 
-
+(*
 #use "topfind";;
 #require "cryptokit";;
 #require "base64";;
@@ -21,6 +22,7 @@ let read_data_from_file file =
 let hash_password pwd =
   Base64.encode_exn(Cryptokit.hash_string (Cryptokit.Hash.sha256 ()) pwd)
 ;;
+*)
 
 let fusinfo ( file1,file2 : string * string): (string * string) list =
   let listefil1 : (string * string) list = read_data_from_file file1 
@@ -47,4 +49,42 @@ let fusinfo ( file1,file2 : string * string): (string * string) list =
 
 let list = fusinfo("depensetout01.txt","depensetout02.txt");;
 list ;;
+
+let findbylogin (login, files : string * (string array) ) : (string*string*(string list)) =
+  let listsamelog : (string * string ) list ref = ref [] in
+  let len : int = Array.length files in
+  for i=0 to len-1 do
+    let listefile : (string * string) list  ref = ref (read_data_from_file files.(i) ) in
+      while !listefile <> [] do
+        if fst(List.hd !listefile) = login
+          then 
+            ( 
+              listsamelog := (snd(List.hd !listefile),files.(i)) :: !listsamelog;
+              listefile := List.tl !listefile
+            )
+          else 
+            (
+              listefile := List.tl !listefile
+            )
+      done
+  done;
+  if !listsamelog = [] || List.length (!listsamelog) = 1 
+    then failwith("Error findbylogin: this login did not occur in those files or just one time")
+    else (
+      let listsamelogcopie : (string * string ) list ref = ref (List.tl(!listsamelog)) in
+      while not(fst(List.hd !listsamelogcopie) = fst(List.hd !listsamelog)) do
+        if List.length(!listsamelog) = 1 then
+          failwith("error no password match")
+        else (
+          if !listsamelogcopie <> [] then
+            listsamelogcopie := List.tl !listsamelogcopie
+          else (
+            listsamelog := List.tl !listsamelog;
+            listsamelogcopie := List.tl(!listsamelog)
+          )
+        )
+      done;
+      (login, fst(List.hd(!listsamelog)),[snd(List.hd(!listsamelog)); snd(List.hd(!listsamelogcopie))])   
+    )
+;;
 
