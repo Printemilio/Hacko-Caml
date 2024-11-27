@@ -94,8 +94,8 @@ let findbylogin (login, files : string * (string array) ) : (string*string*(stri
 
 (*trouver un login à partir d'un mots de passe haché*)
 
-let findbypassword (password, files : string * (string array) ) : (string*string*(string list)) =
-  let listsamelog : (string * string ) list ref = ref [] in
+let findbypassword (password, files : string * (string array) ) : (string*string) =
+  let listsamepassword : (string * string ) list ref = ref [] in
   let len : int = Array.length files in
   for i=0 to len-1 do
     let listefile : (string * string) list  ref = ref (read_data_from_file files.(i) ) in
@@ -103,7 +103,7 @@ let findbypassword (password, files : string * (string array) ) : (string*string
       if fst(List.hd !listefile) = password
       then 
         ( 
-          listsamelog := (snd(List.hd !listefile),files.(i)) :: !listsamelog;
+          listsamepassword := (snd(List.hd !listefile),files.(i)) :: !listsamepassword;
           listefile := List.tl !listefile
         )
       else 
@@ -112,23 +112,7 @@ let findbypassword (password, files : string * (string array) ) : (string*string
         )
     done
   done;
-  if !listsamelog = [] || List.length (!listsamelog) = 1 
-  then failwith("Error findbylogin: this password did not occur in those files or just one time")
-  else (
-    let listsamelogcopie : (string * string ) list ref = ref (List.tl(!listsamelog)) in
-    while not(fst(List.hd !listsamelogcopie) = fst(List.hd !listsamelog)) do
-      if List.length(!listsamelog) = 1 then
-        failwith("error no login match")
-      else (
-        if !listsamelogcopie <> [] then
-          listsamelogcopie := List.tl !listsamelogcopie
-        else (
-          listsamelog := List.tl !listsamelog;
-          listsamelogcopie := List.tl(!listsamelog)
-        )
-      )
-    done;
-    (password, fst(List.hd(!listsamelog)),[snd(List.hd(!listsamelog)); snd(List.hd(!listsamelogcopie))])   
+    (password, listsamepassword)   
   )
 ;; 
 
