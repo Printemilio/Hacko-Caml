@@ -156,7 +156,7 @@ let find_matching_logins (clear_password, files : string array * string array) :
     for i = 0 to len_clear - 1 do
       let hashed_password : string = hash_password (clear_password.(i)) in 
       for j = 0 to len_files - 1 do
-        let data : (string * string) list ref = ref (read_data_from_file files.(j)) in
+        let data : (string * string) list ref = ref (fusinfo(files)) in
         while !data <> [] do
           
           if snd (List.hd !data) = hashed_password then
