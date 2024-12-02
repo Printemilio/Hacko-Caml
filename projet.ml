@@ -57,7 +57,7 @@ read_mdp_en_clair("french_passwords_top20000.txt");;
 let fusinfo ( files : string array): (string * string) list =
   let listconcaten : (string * string) list ref = ref []
   and len : int = Array.length files in
-  for i=0 to len-1 do 
+  for i=0 to len -1 do 
     listconcaten := (read_data_from_file files.(i)) @ !listconcaten
   done;
   let rec aux (listdep, listfin : (string * string) list *(string * string) list) : (string * string) list =
@@ -80,7 +80,7 @@ let fusinfo ( files : string array): (string * string) list =
 ;;
 
 
-let list = fusinfo("depensetout01.txt","depensetout02.txt");; 
+let list = fusinfo([|"depensetout01.txt";"depensetout02.txt"|]);; 
 
 (*trouver le mot de passe d'un login si il se trouve dans plusieurs bases de donné*)
 
@@ -155,6 +155,7 @@ let find_matching_logins (clear_password, files : string array * string array) :
   if len_clear = 0 || len_files = 0 then
     failwith "Error: clear passwords or files array is empty"
   else
+    print_string("here");
     for i = 0 to len_clear - 1 do
       let hashed_password : string = hash_password (clear_password.(i)) in 
       let data : (string * string) list ref = ref (fusinfo(files)) in
@@ -162,7 +163,7 @@ let find_matching_logins (clear_password, files : string array * string array) :
           
           if snd (List.hd !data) = hashed_password then
             (
-              samepasswords := (files.(0), fst (List.hd !data), clear_password.(i)) :: !samepasswords
+              samepasswords := (files.(0),fst (List.hd !data), clear_password.(i)) :: !samepasswords
             );
           data := List.tl !data
         done
@@ -174,7 +175,6 @@ let find_matching_logins (clear_password, files : string array * string array) :
 
 
 
-
-let tab : string array = [|"slogram01.txt"|] in
+let tab : string array = [|"tes01.txt";"tes02.txt"|] in
 find_matching_logins(read_mdp_en_clair("french_passwords_top20000.txt"),tab);;
 
