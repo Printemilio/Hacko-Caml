@@ -57,7 +57,7 @@ read_mdp_en_clair("french_passwords_top20000.txt");;
 let fusinfo ( files : string array): (string * string) list =
   let listconcaten : (string * string) list ref = ref []
   and len : int = Array.length files in
-  for i=0 to len do 
+  for i=0 to len-1 do 
     listconcaten := (read_data_from_file files.(i)) @ !listconcaten
   done;
   let rec aux (listdep, listfin : (string * string) list *(string * string) list) : (string * string) list =
@@ -162,7 +162,7 @@ let find_matching_logins (clear_password, files : string array * string array) :
           
           if snd (List.hd !data) = hashed_password then
             (
-              samepasswords := (files.(j), fst (List.hd !data), clear_password.(i)) :: !samepasswords
+              samepasswords := (files.(0), fst (List.hd !data), clear_password.(i)) :: !samepasswords
             );
           data := List.tl !data
         done
