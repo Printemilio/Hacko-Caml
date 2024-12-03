@@ -148,29 +148,8 @@ let findbypassword (password, files : string * (string array) ) : string * (stri
 
 
 
-let find_matching_logins (clear_password, files : string array * string array) : (string * string * string) list =
-  let samepasswords : (string * string * string) list ref = ref [] in
-  let len_clear : int = Array.length clear_password in
-  let len_files : int = Array.length files in 
-  if len_clear = 0 || len_files = 0 then
-    failwith "Error: clear passwords or files array is empty"
-  else
-    print_string("here");
-    for i = 0 to len_clear - 1 do
-      let hashed_password : string = hash_password (clear_password.(i)) in 
-      let data : (string * string) list ref = ref (fusinfo(files)) in
-        while !data <> [] do
-          
-          if snd (List.hd !data) = hashed_password then
-            (
-              samepasswords := (files.(0),fst (List.hd !data), clear_password.(i)) :: !samepasswords
-            );
-          data := List.tl !data
-        done
-    done;
 
-  !samepasswords
-;;
+
 
 
 
