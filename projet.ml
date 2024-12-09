@@ -1,3 +1,7 @@
+(*Paul Ourliac , Emilio Decaix-Massiani*)
+
+
+(*Donne les couple login/mots de passe contenue dans un fichier*)
 let read_data_from_file file =
 
   let f = open_in file in
@@ -19,11 +23,12 @@ let read_data_from_file file =
 #require "cryptokit";;
 #require "base64";;
   
-  
+(*hache un mot de passe*)  
 let hash_password pwd =
   Base64.encode_exn(Cryptokit.hash_string (Cryptokit.Hash.sha256 ()) pwd)
 ;;
 
+(*transforme une liste en tableau*)
 let list_to_array(liste : 'a list) : 'a array = 
   let len : int = List.length liste in
   let list_tmp : 'a list ref=ref liste in 
@@ -35,8 +40,8 @@ let list_to_array(liste : 'a list) : 'a array =
   tab
 ;;
 
+(*Renvoie un tableau contenant les mots de passe contenue dans un fichier*)
 let read_mdp_en_clair file =
-
   let f = open_in file in
   let rec aux acc =
     try
@@ -50,9 +55,7 @@ let read_mdp_en_clair file =
   let list_mdp_clair : string list = aux [] in
   list_to_array(list_mdp_clair)
 ;;
-(*
-read_mdp_en_clair("french_passwords_top20000.txt");;
-*)
+(*read_mdp_en_clair("french_passwords_top20000.txt");;*)
 
 (* add deux fichier et les mets sous forme de liste*)
 let fusinfo ( files : string array): (string * string) list =
@@ -81,84 +84,96 @@ let fusinfo ( files : string array): (string * string) list =
 ;;
 
 
-let list = fusinfo([|"slogram01.txt";"slogram02.txt"|]);; 
+(*let list = fusinfo([|"slogram01.txt";"slogram02.txt"|]);; *)
 
-(*trouver le mot de passe d'un login si il se trouve dans plusieurs bases de donné*)
-
-let findbylogin (login, files : string * (string array) ) : (string*string*(string list)) =
-  let listsamelog : (string * string ) list ref = ref [] in
-  let len : int = Array.length files in
-  for i=0 to len-1 do
-    let listefile : (string * string) list  ref = ref (read_data_from_file files.(i) ) in
+(*determine si un meme login est present dans plusieurs fuites de donnees (donc dans les fichiers
+correspondant a plusieurs applications web) et dans ce cas determine si les mots de passe sont
+identiques *)
+let findbylogin (login_clear, files : (string * string) * (string * string) list ) : (string*string) =
+  let listsamelog :  string list ref = ref [] in
+    let listefile : (string * string ) list ref = ref files in
     while !listefile <> [] do
-      if fst(List.hd !listefile) = login
+      if fst(List.hd !listefile) = fst(login_clear)
       then 
         ( 
-          listsamelog := (snd(List.hd !listefile),files.(i)) :: !listsamelog;
+          listsamelog := (snd(List.hd !listefile)) :: !listsamelog;
           listefile := List.tl !listefile
         )
       else 
         (
           listefile := List.tl !listefile
         )
-    done
-  done;
-  if !listsamelog = [] || List.length (!listsamelog) = 1 
-  then failwith("Error findbylogin: this login did not occur in those files or just one time")
-  else (
-    let listsamelogcopie : (string * string ) list ref = ref (List.tl(!listsamelog)) in
-    while not(fst(List.hd !listsamelogcopie) = fst(List.hd !listsamelog)) do
-      if List.length(!listsamelog) = 1 then
-        failwith("error no password match")
-      else (
-        if !listsamelogcopie <> [] then
-          listsamelogcopie := List.tl !listsamelogcopie
-        else (
-          listsamelog := List.tl !listsamelog;
-          listsamelogcopie := List.tl(!listsamelog)
-        )
-      )
     done;
-    (login, fst(List.hd(!listsamelog)),[snd(List.hd(!listsamelog)); snd(List.hd(!listsamelogcopie))])   
-  )
+  let mdp : string ref=ref "" in 
+    while !listsamelog <> [] do
+      if (List.hd !listsamelog) = hash_password(snd(login_clear))
+      then mdp := snd(login_clear);
+      listsamelog := List.tl !listsamelog
+    done;
+    (fst(login_clear),!mdp)
 ;;
 
 
-(*trouver un login à partir d'un mots de passe haché*)
 
-let findbypassword (password, files : string * (string array) ) : string * (string*string) list =
-  let listsamepassword : (string * string ) list ref = ref [] in
-  let len : int = Array.length files in
-  for i=0 to len-1 do
-    let listefile : (string * string) list  ref = ref (read_data_from_file files.(i) ) in
+
+let try_all_login (files : string array): (string * string ) list =
+  let result : (string * string) list ref = ref [] in
+  let depen : (string * string) list ref = ref (fusinfo([|"depensetout01.txt";"depensetout02.txt"|])) in
+  let info : (string * string) list = fusinfo(files) in 
+  while !depen <> [] do
+    let tmp : string * string  = findbylogin(List.hd !depen, info) in
+    if snd(tmp) <> "" 
+    then result := tmp :: !result ;
+    depen := List.tl !depen
+  done;
+  !result
+;;
+
+
+try_all_login([|"slogram01.txt";"slogram02.txt"|]);;   
+
+
+
+(*determine si un meme mot de passe hache est present dans plusieurs fuites de donnees et trouve
+a quels logins ils sont associes*)
+let findbypassword (password, files : string * (string * string) list ) : string * (string) list =
+  let listsamepassword : string  list ref = ref [] in
+  let listefile : (string * string) list  ref = ref files in
     while !listefile <> [] do
       if snd(List.hd !listefile) = password
       then 
         ( 
-          listsamepassword := (fst(List.hd !listefile),files.(i)) :: !listsamepassword;
+          listsamepassword := (fst(List.hd !listefile)) :: !listsamepassword;
           listefile := List.tl !listefile
         )
       else 
         (
           listefile := List.tl !listefile
         )
-    done
-  done;
+    done;
     (password, !listsamepassword) 
 ;; 
 
-
-let try_all_password (file_pass, files : string array * (string array)): (string * ((string * string) list)) list =
+(*Etant donnee une liste de mots de passe en clair, extrait la liste des couples (application web,
+login) pour lequel le mot de passe hache associe au login correspond au hache d’un des mots de
+passe en clair*)
+let try_all_password (file_pass, files : string array * (string array)): (string * (string list)) list =
   let len = Array.length (file_pass) in
-  let result : (string * ((string * string) list)) list ref = ref [] in
+  let result : (string * (string  list)) list ref = ref [] in
+  let info : (string * string) list = fusinfo(files) in
   for i=0 to len -1 do
-    let tmp : (string * ((string * string) list)) = findbypassword(hash_password(file_pass.(i)), files) in
+    let tmp : (string * (string list)) = findbypassword(hash_password(file_pass.(i)), info) in
     if (snd tmp) <> [] then (
       result := tmp :: !result
     )
   done;
   !result
 ;;
+
+
+
+
+
 
 
 let find_matching_logins (clear_password, files : string array * string array) : (string * string * string) list =
@@ -189,3 +204,5 @@ let find_matching_logins (clear_password, files : string array * string array) :
 
 let tab : string array = [|"slogram01.txt";"slogram02.txt"|] in
 List.length (find_matching_logins(read_mdp_en_clair("french_passwords_top20000.txt"),tab));;
+
+
