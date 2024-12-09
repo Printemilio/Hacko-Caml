@@ -11,7 +11,8 @@ let read_data_from_file file =
       close_in f;
       List.rev acc
   in
-  aux [];;
+  aux []
+;;
 
   
 #use "topfind";;
@@ -49,9 +50,9 @@ let read_mdp_en_clair file =
   let list_mdp_clair : string list = aux [] in
   list_to_array(list_mdp_clair)
 ;;
-
+(*
 read_mdp_en_clair("french_passwords_top20000.txt");;
-
+*)
 
 (* add deux fichier et les mets sous forme de liste*)
 let fusinfo ( files : string array): (string * string) list =
@@ -80,7 +81,7 @@ let fusinfo ( files : string array): (string * string) list =
 ;;
 
 
-let list = fusinfo([|"depensetout01.txt";"depensetout02.txt"|]);; 
+let list = fusinfo([|"slogram01.txt";"slogram02.txt"|]);; 
 
 (*trouver le mot de passe d'un login si il se trouve dans plusieurs bases de donné*)
 
@@ -112,7 +113,10 @@ let findbylogin (login, files : string * (string array) ) : (string*string*(stri
       else (
         if !listsamelogcopie <> [] then
           listsamelogcopie := List.tl !listsamelogcopie
-        else (#
+        else (
+          listsamelog := List.tl !listsamelog;
+          listsamelogcopie := List.tl(!listsamelog)
+        )
       )
     done;
     (login, fst(List.hd(!listsamelog)),[snd(List.hd(!listsamelog)); snd(List.hd(!listsamelogcopie))])   
@@ -127,10 +131,10 @@ let findbypassword (password, files : string * (string array) ) : string * (stri
   for i=0 to len-1 do
     let listefile : (string * string) list  ref = ref (read_data_from_file files.(i) ) in
     while !listefile <> [] do
-      if snd(List.hd !listefile) = password
+      if fst(List.hd !listefile) = password
       then 
         ( 
-          listsamepassword := (fst(List.hd !listefile),files.(i)) :: !listsamepassword;
+          listsamepassword := (snd(List.hd !listefile),files.(i)) :: !listsamepassword;
           listefile := List.tl !listefile
         )
       else 
@@ -143,20 +147,7 @@ let findbypassword (password, files : string * (string array) ) : string * (stri
 ;; 
 
 
-let try_all_password (file_pass, files : string array * (string array)): (string * ((string * string) list)) list =
-  let len = Array.length (file_pass) in
-  let result : (string * ((string * string) list)) list ref = ref [] in
-  for i=0 to len -1 do
-    let tmp : (string * ((string * string) list)) = findbypassword(hash_password(file_pass.(i)), files) in
-    if (snd tmp) <> [] then (
-      result := tmp :: !result
-    )
-  done;
-  !result
-;;
 
-let tab : string array = [|"slogram01.txt";"slogram02.txt"|] in
-try_all_password(read_mdp_en_clair("french_passwords_top20000.txt"),tab);;
 
 let find_matching_logins (clear_password, files : string array * string array) : (string * string * string) list =
   let samepasswords : (string * string * string) list ref = ref [] in
@@ -165,25 +156,24 @@ let find_matching_logins (clear_password, files : string array * string array) :
   if len_clear = 0 || len_files = 0 then
     failwith "Error: clear passwords or files array is empty"
   else
+    let info : (string * string) list = (fusinfo(files)) in
     for i = 0 to len_clear - 1 do
       let hashed_password : string = hash_password (clear_password.(i)) in 
-      let data : (string * string) list ref = ref (fusinfo(files)) in
-      while !data <> [] do
+      let data : (string * string) list ref = ref info in
+        while !data <> [] do
           
-        if snd (List.hd !data) = hashed_password then
-          (
-            samepasswords := (files.(0),fst (List.hd !data), clear_password.(i)) :: !samepasswords
-          );
-        data := List.tl !data
-      done
-      
+          if snd (List.hd !data) = hashed_password then
+            (
+              samepasswords := (files.(0),fst (List.hd !data), clear_password.(i)) :: !samepasswords
+            );
+          data := List.tl !data
+        done
     done;
-
   !samepasswords
 ;;
 
 
 
 
-let tab : string array = [|"tes01.txt";"tes02.txt"|] in
-find_matching_logins(read_mdp_en_clair("french_passwords_top20000.txt"),tab);;
+let tab : string array = [|"slogram01.txt";"slogram02.txt"|] in
+List.length (find_matching_logins(read_mdp_en_clair("french_passwords_top20000.txt"),tab))
