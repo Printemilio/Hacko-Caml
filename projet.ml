@@ -123,6 +123,7 @@ let findbylogin (login, files : string * (string array) ) : (string*string*(stri
   )
 ;;
 
+
 (*trouver un login à partir d'un mots de passe haché*)
 
 let findbypassword (password, files : string * (string array) ) : string * (string*string) list =
@@ -131,10 +132,10 @@ let findbypassword (password, files : string * (string array) ) : string * (stri
   for i=0 to len-1 do
     let listefile : (string * string) list  ref = ref (read_data_from_file files.(i) ) in
     while !listefile <> [] do
-      if fst(List.hd !listefile) = password
+      if snd(List.hd !listefile) = password
       then 
         ( 
-          listsamepassword := (snd(List.hd !listefile),files.(i)) :: !listsamepassword;
+          listsamepassword := (fst(List.hd !listefile),files.(i)) :: !listsamepassword;
           listefile := List.tl !listefile
         )
       else 
@@ -147,6 +148,17 @@ let findbypassword (password, files : string * (string array) ) : string * (stri
 ;; 
 
 
+let try_all_password (file_pass, files : string array * (string array)): (string * ((string * string) list)) list =
+  let len = Array.length (file_pass) in
+  let result : (string * ((string * string) list)) list ref = ref [] in
+  for i=0 to len -1 do
+    let tmp : (string * ((string * string) list)) = findbypassword(hash_password(file_pass.(i)), files) in
+    if (snd tmp) <> [] then (
+      result := tmp :: !result
+    )
+  done;
+  !result
+;;
 
 
 let find_matching_logins (clear_password, files : string array * string array) : (string * string * string) list =
@@ -176,4 +188,4 @@ let find_matching_logins (clear_password, files : string array * string array) :
 
 
 let tab : string array = [|"slogram01.txt";"slogram02.txt"|] in
-List.length (find_matching_logins(read_mdp_en_clair("french_passwords_top20000.txt"),tab))
+List.length (find_matching_logins(read_mdp_en_clair("french_passwords_top20000.txt"),tab));;
