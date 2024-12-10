@@ -140,7 +140,7 @@ try_all_login([|"slogram01.txt";"slogram02.txt"|]);;
 
 (*determine si un meme mot de passe hache est present dans plusieurs fuites de donnees et trouve
 a quels logins ils sont associes*)
-let findbypassword (password, files : string * (string * string) list ) : string * (string) list =
+let findbypassword (password, files : string * (string * string) list ) : tring list =
   let listsamepassword : string  list ref = ref [] in
   let listefile : (string * string) list  ref = ref files in
     while !listefile <> [] do
@@ -155,20 +155,24 @@ let findbypassword (password, files : string * (string * string) list ) : string
           listefile := List.tl !listefile
         )
     done;
-    (password, !listsamepassword) 
+    !listsamepassword 
 ;; 
 
 (*Etant donnee une liste de mots de passe en clair, extrait la liste des couples (application web,
 login) pour lequel le mot de passe hache associe au login correspond au hache d’un des mots de
 passe en clair*)
-let try_all_password (file_pass, files : string array * (string array)): (string * (string list)) list =
-  let len = Array.length (file_pass) in
-  let result : (string * (string  list)) list ref = ref [] in
-  let info : (string * string) list = fusinfo(files) in
+let try_all_password (file_pass, files : string array * (string array)): (string * string * string) list =
+  let len = Array.length (file_pass) and
+  result : (string * string * string) list ref = ref [] and
+  info : (string * string) list = fusinfo(files) and
+  tmp : string list ref = ref [] in
   for i=0 to len -1 do
-    let tmp : (string * (string list)) = findbypassword(hash_password(file_pass.(i)), info) in
-    if (snd tmp) <> [] then (
-      result := tmp :: !result
+    tmp := findbypassword(hash_password(file_pass.(i)), info);
+    if !tmp <> [] then (
+      while !tmp <> [] do
+        result := (file_pass.(i),List.hd !tmp,files.(0)) :: !result;
+        tmp:= List.tl !tmp
+      done
     )
   done;
   !result
