@@ -116,18 +116,22 @@ let findbylogin (login_clear, files : (string * string) * (string * string) list
 
 
 
-let try_all_login (files : string array): (string * string ) list =
-  let result : (string * string) list ref = ref [] in
+let try_all_login (files : string array): (string * string * string) list =
+  let result : (string * string * string) list ref = ref [] in
   let depen : (string * string) list ref = ref (fusinfo([|"depensetout01.txt";"depensetout02.txt"|])) in
   let info : (string * string) list = fusinfo(files) in 
   while !depen <> [] do
     let tmp : string * string  = findbylogin(List.hd !depen, info) in
     if snd(tmp) <> "" 
-    then result := tmp :: !result ;
+    then (
+      let tmp2 : string * string * string = (fst(tmp), snd(tmp), files.(0)) in
+      result := tmp2 :: !result 
+    );
     depen := List.tl !depen
   done;
   !result
 ;;
+
 
 
 try_all_login([|"slogram01.txt";"slogram02.txt"|]);;   
@@ -204,5 +208,15 @@ let find_matching_logins (clear_password, files : string array * string array) :
 
 let tab : string array = [|"slogram01.txt";"slogram02.txt"|] in
 List.length (find_matching_logins(read_mdp_en_clair("french_passwords_top20000.txt"),tab));;
+
+
+let crackers():(string * string * string) list =
+  let slogram : string array = [|"slogram01.txt";"slogram02.txt"|] in
+  let tetedamis : string array = [|"tetedamis01.txt";"tetedamis02.txt"|] in
+  let final: (string * string * string) list ref = ref [] in
+  final := try_all_password(read_mdp_en_clair("french_passwords_top20000.txt"),slogram) @ !final;
+  final := try_all_login (read_mdp_en_clair("french_passwords_top20000.txt"),tetedamis) @ !final;
+  !final
+;;
 
 
