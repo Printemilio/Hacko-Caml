@@ -144,7 +144,7 @@ try_all_login([|"slogram01.txt";"slogram02.txt"|]);;
 
 (*determine si un meme mot de passe hache est present dans plusieurs fuites de donnees et trouve
 a quels logins ils sont associes*)
-let findbypassword (password, files : string * (string * string) list ) : tring list =
+let findbypassword (password, files : string * (string * string) list ) : string list =
   let listsamepassword : string  list ref = ref [] in
   let listefile : (string * string) list  ref = ref files in
     while !listefile <> [] do
@@ -183,48 +183,19 @@ let try_all_password (file_pass, files : string array * (string array)): (string
 ;;
 
 
-
-
-
-
-
-let find_matching_logins (clear_password, files : string array * string array) : (string * string * string) list =
-  let samepasswords : (string * string * string) list ref = ref [] in
-  let len_clear : int = Array.length clear_password in
-  let len_files : int = Array.length files in 
-  if len_clear = 0 || len_files = 0 then
-    failwith "Error: clear passwords or files array is empty"
-  else
-    let info : (string * string) list = (fusinfo(files)) in
-    for i = 0 to len_clear - 1 do
-      let hashed_password : string = hash_password (clear_password.(i)) in 
-      let data : (string * string) list ref = ref info in
-        while !data <> [] do
-          
-          if snd (List.hd !data) = hashed_password then
-            (
-              samepasswords := (files.(0),fst (List.hd !data), clear_password.(i)) :: !samepasswords
-            );
-          data := List.tl !data
-        done
-    done;
-  !samepasswords
-;;
-
-
-
-
-let tab : string array = [|"slogram01.txt";"slogram02.txt"|] in
-List.length (find_matching_logins(read_mdp_en_clair("french_passwords_top20000.txt"),tab));;
-
-
 let crackers():(string * string * string) list =
   let slogram : string array = [|"slogram01.txt";"slogram02.txt"|] in
   let tetedamis : string array = [|"tetedamis01.txt";"tetedamis02.txt"|] in
   let final: (string * string * string) list ref = ref [] in
-  final := try_all_password(read_mdp_en_clair("french_passwords_top20000.txt"),slogram) @ !final;
-  final := try_all_login (read_mdp_en_clair("french_passwords_top20000.txt"),tetedamis) @ !final;
+  let mdp: string array = read_mdp_en_clair("french_passwords_top20000.txt") in
+  final := try_all_password(mdp,slogram) @ !final;
+  final := try_all_password(mdp,tetedamis) @ !final;
+  final := try_all_login (tetedamis) @ !final;
+  final := try_all_login (slogram) @ !final;
+  final := removedbl(!final, []);
   !final
 ;;
 
-
+(*Environ 1 minute et 10 sec*)
+List.length (crackers());;
+crackers();;
