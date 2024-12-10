@@ -57,6 +57,26 @@ let read_mdp_en_clair file =
 ;;
 (*read_mdp_en_clair("french_passwords_top20000.txt");;*)
 
+(*enleve les doublons d'une liste*)
+let rec removedbl (listdep, listfin : 'a list * 'a list) : 'a list =
+  if listdep = [] 
+  then listfin
+  else 
+    (
+      let listtmp : 'a list ref = ref listfin 
+      and ispresent : bool ref = ref false in
+      while !listtmp <> [] do 
+        if List.hd listdep = List.hd !listtmp
+        then ispresent := true ;
+        listtmp :=  List.tl !listtmp
+      done;
+      if not (!ispresent) 
+      then removedbl (List.tl listdep, (List.hd listdep) :: listfin)
+      else removedbl (List.tl listdep,  listfin)
+    )
+;;
+
+
 (* add deux fichier et les mets sous forme de liste*)
 let fusinfo ( files : string array): (string * string) list =
   let listconcaten : (string * string) list ref = ref []
@@ -64,23 +84,7 @@ let fusinfo ( files : string array): (string * string) list =
   for i=0 to len -1 do 
     listconcaten := (read_data_from_file files.(i)) @ !listconcaten
   done;
-  let rec aux (listdep, listfin : (string * string) list *(string * string) list) : (string * string) list =
-    if listdep = [] 
-    then listfin
-    else 
-      (
-        let listtmp : (string * string) list ref = ref listfin 
-        and ispresent : bool ref = ref false in
-        while !listtmp <> [] do 
-          if List.hd listdep = List.hd !listtmp
-          then ispresent := true ;
-          listtmp :=  List.tl !listtmp
-        done;
-        if not (!ispresent) 
-        then aux (List.tl listdep, (List.hd listdep) :: listfin)
-        else aux (List.tl listdep,  listfin)
-      )
-  in aux(!listconcaten,[])
+  removedbl(!listconcaten,[])
 ;;
 
 
